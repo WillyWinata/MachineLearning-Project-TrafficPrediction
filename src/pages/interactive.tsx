@@ -42,7 +42,14 @@ export default function InteractivePage() {
     setIsLoading(true);
 
     // Simulate API call with realistic predictions
-    setTimeout(() => {
+    setTimeout(async () => {
+      // const response = await fetch("http://localhost:5000/predict", {
+      //   method: "POST",
+      //   body: JSON.stringify({"features": []})
+      // })
+
+      // const result = await response.json()
+
       const hour = Number.parseInt(selectedTime.split(":")[0]);
       const dayOfWeek = new Date(selectedDate).getDay();
 
@@ -117,7 +124,10 @@ export default function InteractivePage() {
     <div className="min-h-screen bg-slate-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-12">
-          <Badge variant="secondary" className="mb-4 bg-gray-100 rounded-xl font-semibold">
+          <Badge
+            variant="secondary"
+            className="mb-4 bg-gray-100 rounded-xl font-semibold"
+          >
             <BarChart3 className="h-4 w-4 mr-2" />
             Interactive Predictions
           </Badge>
@@ -253,7 +263,10 @@ export default function InteractivePage() {
                       </div>
                       <div className="text-slate-600">vehicles per hour</div>
                       <div className="mt-4 flex justify-center">
-                        <Badge variant="secondary" className="bg-gray-200 rounded-xl font-semibold">
+                        <Badge
+                          variant="secondary"
+                          className="bg-gray-200 rounded-xl font-semibold"
+                        >
                           {prediction.confidence}% confidence
                         </Badge>
                       </div>
