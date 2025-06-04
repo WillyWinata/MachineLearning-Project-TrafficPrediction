@@ -1,12 +1,6 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Car, BarChart3, Leaf, Clock, MapPin, TrendingUp } from "lucide-react";
+import { Car, BarChart3, Leaf, TrendingUp, Home, Globe2 } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -14,16 +8,19 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          <Badge variant="default" className="mb-4 bg-gray-100 rounded-xl font-semibold">
+          <Badge
+            variant="default"
+            className="mb-4 bg-gray-100 rounded-xl font-semibold"
+          >
             AI-Powered Traffic Intelligence
           </Badge>
           <h1 className="text-5xl font-bold text-slate-900 mb-6">
             Smart Traffic Prediction System
           </h1>
           <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
-            Advanced machine learning algorithms that predict vehicle counts,
-            traffic congestion patterns, and environmental impact to help create
-            smarter, more sustainable transportation systems.
+            Advanced machine learning algorithms that predict traffic congestion
+            patterns and environmental impact to help create smarter, more
+            sustainable transportation systems.
           </p>
           <div className="flex justify-center gap-4 mb-12">
             <div className="flex items-center gap-2 text-slate-700">
@@ -51,69 +48,52 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <Car className="h-6 w-6 text-green-600" />
+                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+                  <Home className="h-6 w-6 text-yellow-600" />
                 </div>
                 <CardTitle className="text-slate-900">
-                  Accurate Vehicle Counting
+                  Support for Urban Planning
                 </CardTitle>
-                <CardDescription>
-                  Real-time vehicle detection and counting with 95%+ accuracy
-                  using computer vision and deep learning algorithms.
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-slate-600">
-                  Our AI processes traffic camera feeds and sensor data to
-                  provide precise vehicle counts across different vehicle types,
-                  helping traffic management systems make informed decisions
-                  about signal timing and route optimization.
+                  The predictions can assist city planners in making data-driven
+                  decisions for traffic management, infrastructure improvements,
+                  and public transportation scheduling.
                 </p>
               </CardContent>
             </Card>
-
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                  <BarChart3 className="h-6 w-6 text-orange-600" />
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <Leaf className="h-6 w-6 text-green-600" />
                 </div>
                 <CardTitle className="text-slate-900">
-                  Traffic Jam Prediction
+                  Promoting Sustainable Mobility
                 </CardTitle>
-                <CardDescription>
-                  Predictive analytics that forecast traffic congestion patterns
-                  up to 2 hours in advance.
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-slate-600">
-                  By analyzing historical traffic patterns, weather conditions,
-                  events, and real-time data, our model predicts potential
-                  traffic bottlenecks before they occur, enabling proactive
-                  traffic management and route suggestions.
+                  With accurate forecasts, the model supports efforts to reduce
+                  traffic-related emissions, contributing to cleaner air and
+                  more eco-friendly urban transportation systems.
                 </p>
               </CardContent>
             </Card>
-
             <Card className="border-0 shadow-lg">
               <CardHeader>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <Leaf className="h-6 w-6 text-blue-600" />
+                  <Globe2 className="h-6 w-6 text-blue-600" />
                 </div>
                 <CardTitle className="text-slate-900">
-                  Carbon Emission Analysis
+                  Real-World Integration Potential
                 </CardTitle>
-                <CardDescription>
-                  Environmental impact assessment through real-time carbon
-                  footprint calculations.
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-slate-600">
-                  Our system calculates carbon emissions based on vehicle types,
-                  traffic flow, and congestion levels, providing valuable
-                  insights for urban planning and environmental policy
-                  decisions.
+                  Designed with practical applications in mind, this model can
+                  be integrated into smart traffic systems to support long-term
+                  planning and real-time monitoring.
                 </p>
               </CardContent>
             </Card>
@@ -130,42 +110,33 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h3 className="text-2xl font-semibold text-slate-900 mb-6">
-                Advanced Machine Learning
+                Machine Learning Features
               </h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <Clock className="h-5 w-5 text-green-600 mt-1" />
-                  <div>
+                  <Leaf className="h-5 w-5 text-green-600 mt-1" />
+                  <div className="max-w-[80%] flex flex-col gap-2">
                     <h4 className="font-semibold text-slate-900">
-                      Real-time Processing
+                      Carbon Emission Forecasting
                     </h4>
                     <p className="text-slate-600">
-                      Process thousands of data points per second with minimal
-                      latency
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-green-600 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-slate-900">
-                      Multi-location Support
-                    </h4>
-                    <p className="text-slate-600">
-                      Simultaneous monitoring and prediction across multiple
-                      intersections
+                      By analyzing vehicle counts, we can estimates carbon
+                      emissions throughout the day, providing insights into
+                      pollution levels and environmental impact.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <TrendingUp className="h-5 w-5 text-green-600 mt-1" />
-                  <div>
+                  <div className="max-w-[80%] flex flex-col gap-2">
                     <h4 className="font-semibold text-slate-900">
-                      Continuous Learning
+                      Traffic Density Prediction
                     </h4>
                     <p className="text-slate-600">
-                      Model improves accuracy over time through continuous data
-                      ingestion
+                      Our AI model forecasts traffic congestion levels in the
+                      Thamrin area based on time and day, helping commuters
+                      anticipate peak hours and plan their routes more
+                      efficiently.
                     </p>
                   </div>
                 </div>
@@ -173,30 +144,26 @@ export default function HomePage() {
             </div>
             <div className="bg-slate-50 p-8 rounded-lg">
               <h4 className="font-semibold text-slate-900 mb-4">
-                Key Performance Metrics
+                XGBoost Performance Metrics
               </h4>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Vehicle Count Accuracy</span>
-                  <span className="font-semibold text-slate-900">95.8%</span>
+                  <span className="text-slate-600">
+                    R2 Error Score
+                  </span>
+                  <span className="font-semibold text-slate-900">78.0%</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">
-                    Traffic Prediction Accuracy
+                    Mean Average Error (MAE)
                   </span>
-                  <span className="font-semibold text-slate-900">89.2%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Processing Speed</span>
-                  <span className="font-semibold text-slate-900">
-                    {"<50ms"}
-                  </span>
+                  <span className="font-semibold text-slate-900">871.65</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">
-                    Carbon Calculation Precision
+                    Root Mean Square Error (RMSE)
                   </span>
-                  <span className="font-semibold text-slate-900">92.5%</span>
+                  <span className="font-semibold text-slate-900">1203.06</span>
                 </div>
               </div>
             </div>
@@ -213,8 +180,8 @@ export default function HomePage() {
           <p className="text-lg text-slate-600 mb-8">
             Our AI-powered traffic prediction system contributes to more
             efficient urban transportation, reduced emissions, and improved
-            quality of life for city residents. By providing accurate, real-time
-            insights into traffic patterns and environmental impact, we enable
+            quality of life for city residents. By providing accurate insights
+            into traffic patterns and environmental impact, we enable
             data-driven decisions that benefit both mobility and sustainability.
           </p>
           <div className="grid md:grid-cols-3 gap-8 mt-12">

@@ -33,199 +33,11 @@ export default function CodePage() {
 
         <Tabs defaultValue="model" className="space-y-8">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="model">Model Architecture</TabsTrigger>
+            <TabsTrigger value="prediction">Training Dataset</TabsTrigger>
+            <TabsTrigger value="model">Model Development</TabsTrigger>
             <TabsTrigger value="preprocessing">Data Processing</TabsTrigger>
-            <TabsTrigger value="prediction">Prediction Engine</TabsTrigger>
             <TabsTrigger value="api">API Integration</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="model" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Brain className="h-5 w-5 text-blue-600" />
-                  <CardTitle>Neural Network Architecture</CardTitle>
-                </div>
-                <CardDescription>
-                  Deep learning model for traffic pattern recognition and
-                  prediction
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
-                  {`import tensorflow as tf
-from tensorflow.keras import layers, models
-import numpy as np
-
-class TrafficPredictionModel:
-    def __init__(self, sequence_length=24, features=8):
-        self.sequence_length = sequence_length
-        self.features = features
-        self.model = self._build_model()
-    
-    def _build_model(self):
-        model = models.Sequential([
-            # LSTM layers for temporal pattern recognition
-            layers.LSTM(128, return_sequences=True, 
-                       input_shape=(self.sequence_length, self.features)),
-            layers.Dropout(0.2),
-            
-            layers.LSTM(64, return_sequences=True),
-            layers.Dropout(0.2),
-            
-            layers.LSTM(32, return_sequences=False),
-            layers.Dropout(0.2),
-            
-            # Dense layers for prediction
-            layers.Dense(64, activation='relu'),
-            layers.Dense(32, activation='relu'),
-            layers.Dense(3, activation='linear')  # vehicle_count, traffic_level, carbon_emission
-        ])
-        
-        model.compile(
-            optimizer='adam',
-            loss='mse',
-            metrics=['mae', 'mape']
-        )
-        
-        return model
-    
-    def preprocess_data(self, raw_data):
-        # Normalize features
-        normalized_data = (raw_data - np.mean(raw_data, axis=0)) / np.std(raw_data, axis=0)
-        
-        # Create sequences
-        X, y = [], []
-        for i in range(len(normalized_data) - self.sequence_length):
-            X.append(normalized_data[i:(i + self.sequence_length)])
-            y.append(normalized_data[i + self.sequence_length, :3])  # Predict next values
-        
-        return np.array(X), np.array(y)
-    
-    def train(self, X_train, y_train, epochs=100, batch_size=32):
-        history = self.model.fit(
-            X_train, y_train,
-            epochs=epochs,
-            batch_size=batch_size,
-            validation_split=0.2,
-            verbose=1
-        )
-        return history
-    
-    def predict(self, input_sequence):
-        prediction = self.model.predict(input_sequence.reshape(1, self.sequence_length, self.features))
-        return {
-            'vehicle_count': int(prediction[0][0]),
-            'traffic_level': float(prediction[0][1]),
-            'carbon_emission': float(prediction[0][2])
-        }`}
-                </pre>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="preprocessing" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-green-600" />
-                  <CardTitle>Data Processing Pipeline</CardTitle>
-                </div>
-                <CardDescription>
-                  Real-time data ingestion and feature engineering
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
-                  {`import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-import cv2
-
-class DataProcessor:
-    def __init__(self):
-        self.feature_columns = [
-            'hour', 'day_of_week', 'month', 'is_weekend',
-            'weather_temp', 'weather_condition', 'event_nearby', 'historical_avg'
-        ]
-    
-    def extract_temporal_features(self, timestamp):
-        dt = pd.to_datetime(timestamp)
-        return {
-            'hour': dt.hour,
-            'day_of_week': dt.dayofweek,
-            'month': dt.month,
-            'is_weekend': 1 if dt.dayofweek >= 5 else 0
-        }
-    
-    def process_camera_feed(self, frame):
-        # Vehicle detection using YOLO
-        net = cv2.dnn.readNet('yolo_weights.weights', 'yolo_config.cfg')
-        
-        # Prepare frame
-        blob = cv2.dnn.blobFromImage(frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
-        net.setInput(blob)
-        outputs = net.forward()
-        
-        vehicle_count = 0
-        vehicle_types = {'car': 0, 'truck': 0, 'bus': 0, 'motorcycle': 0}
-        
-        for output in outputs:
-            for detection in output:
-                scores = detection[5:]
-                class_id = np.argmax(scores)
-                confidence = scores[class_id]
-                
-                if confidence > 0.5 and class_id in [2, 3, 5, 7]:  # Vehicle classes
-                    vehicle_count += 1
-                    if class_id == 2: vehicle_types['car'] += 1
-                    elif class_id == 3: vehicle_types['motorcycle'] += 1
-                    elif class_id == 5: vehicle_types['bus'] += 1
-                    elif class_id == 7: vehicle_types['truck'] += 1
-        
-        return vehicle_count, vehicle_types
-    
-    def calculate_carbon_emission(self, vehicle_types, traffic_speed):
-        # Emission factors (g CO2/km)
-        emission_factors = {
-            'car': 120,
-            'truck': 280,
-            'bus': 200,
-            'motorcycle': 80
-        }
-        
-        # Speed adjustment factor
-        speed_factor = 1.0
-        if traffic_speed < 20:  # Heavy traffic
-            speed_factor = 1.5
-        elif traffic_speed < 40:  # Moderate traffic
-            speed_factor = 1.2
-        
-        total_emission = 0
-        for vehicle_type, count in vehicle_types.items():
-            total_emission += count * emission_factors[vehicle_type] * speed_factor
-        
-        return total_emission / 1000  # Convert to kg CO2
-    
-    def prepare_features(self, timestamp, weather_data, event_data, historical_data):
-        temporal_features = self.extract_temporal_features(timestamp)
-        
-        features = [
-            temporal_features['hour'],
-            temporal_features['day_of_week'],
-            temporal_features['month'],
-            temporal_features['is_weekend'],
-            weather_data.get('temperature', 20),
-            1 if weather_data.get('condition') == 'rain' else 0,
-            1 if event_data.get('nearby_event') else 0,
-            historical_data.get('avg_traffic', 50)
-        ]
-        
-        return np.array(features)`}
-                </pre>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="prediction" className="space-y-6">
             <Card>
@@ -340,6 +152,194 @@ class PredictionEngine:
             </Card>
           </TabsContent>
 
+          <TabsContent value="model" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Brain className="h-5 w-5 text-blue-600" />
+                  <CardTitle>Model Development</CardTitle>
+                </div>
+                <CardDescription>
+                  Machine learning model for traffic pattern recognition and
+                  prediction
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+                  {`import tensorflow as tf
+from tensorflow.keras import layers, models
+import numpy as np
+
+class TrafficPredictionModel:
+    def __init__(self, sequence_length=24, features=8):
+        self.sequence_length = sequence_length
+        self.features = features
+        self.model = self._build_model()
+    
+    def _build_model(self):
+        model = models.Sequential([
+            # LSTM layers for temporal pattern recognition
+            layers.LSTM(128, return_sequences=True, 
+                       input_shape=(self.sequence_length, self.features)),
+            layers.Dropout(0.2),
+            
+            layers.LSTM(64, return_sequences=True),
+            layers.Dropout(0.2),
+            
+            layers.LSTM(32, return_sequences=False),
+            layers.Dropout(0.2),
+            
+            # Dense layers for prediction
+            layers.Dense(64, activation='relu'),
+            layers.Dense(32, activation='relu'),
+            layers.Dense(3, activation='linear')  # vehicle_count, traffic_level, carbon_emission
+        ])
+        
+        model.compile(
+            optimizer='adam',
+            loss='mse',
+            metrics=['mae', 'mape']
+        )
+        
+        return model
+    
+    def preprocess_data(self, raw_data):
+        # Normalize features
+        normalized_data = (raw_data - np.mean(raw_data, axis=0)) / np.std(raw_data, axis=0)
+        
+        # Create sequences
+        X, y = [], []
+        for i in range(len(normalized_data) - self.sequence_length):
+            X.append(normalized_data[i:(i + self.sequence_length)])
+            y.append(normalized_data[i + self.sequence_length, :3])  # Predict next values
+        
+        return np.array(X), np.array(y)
+    
+    def train(self, X_train, y_train, epochs=100, batch_size=32):
+        history = self.model.fit(
+            X_train, y_train,
+            epochs=epochs,
+            batch_size=batch_size,
+            validation_split=0.2,
+            verbose=1
+        )
+        return history
+    
+    def predict(self, input_sequence):
+        prediction = self.model.predict(input_sequence.reshape(1, self.sequence_length, self.features))
+        return {
+            'vehicle_count': int(prediction[0][0]),
+            'traffic_level': float(prediction[0][1]),
+            'carbon_emission': float(prediction[0][2])
+        }`}
+                </pre>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="preprocessing" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Database className="h-5 w-5 text-green-600" />
+                  <CardTitle>Data Processing</CardTitle>
+                </div>
+                <CardDescription>
+                  Data cleaning and preprocessing
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+                  {`import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+import cv2
+
+class DataProcessor:
+    def __init__(self):
+        self.feature_columns = [
+            'hour', 'day_of_week', 'month', 'is_weekend',
+            'weather_temp', 'weather_condition', 'event_nearby', 'historical_avg'
+        ]
+    
+    def extract_temporal_features(self, timestamp):
+        dt = pd.to_datetime(timestamp)
+        return {
+            'hour': dt.hour,
+            'day_of_week': dt.dayofweek,
+            'month': dt.month,
+            'is_weekend': 1 if dt.dayofweek >= 5 else 0
+        }
+    
+    def process_camera_feed(self, frame):
+        # Vehicle detection using YOLO
+        net = cv2.dnn.readNet('yolo_weights.weights', 'yolo_config.cfg')
+        
+        # Prepare frame
+        blob = cv2.dnn.blobFromImage(frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
+        net.setInput(blob)
+        outputs = net.forward()
+        
+        vehicle_count = 0
+        vehicle_types = {'car': 0, 'truck': 0, 'bus': 0, 'motorcycle': 0}
+        
+        for output in outputs:
+            for detection in output:
+                scores = detection[5:]
+                class_id = np.argmax(scores)
+                confidence = scores[class_id]
+                
+                if confidence > 0.5 and class_id in [2, 3, 5, 7]:  # Vehicle classes
+                    vehicle_count += 1
+                    if class_id == 2: vehicle_types['car'] += 1
+                    elif class_id == 3: vehicle_types['motorcycle'] += 1
+                    elif class_id == 5: vehicle_types['bus'] += 1
+                    elif class_id == 7: vehicle_types['truck'] += 1
+        
+        return vehicle_count, vehicle_types
+    
+    def calculate_carbon_emission(self, vehicle_types, traffic_speed):
+        # Emission factors (g CO2/km)
+        emission_factors = {
+            'car': 120,
+            'truck': 280,
+            'bus': 200,
+            'motorcycle': 80
+        }
+        
+        # Speed adjustment factor
+        speed_factor = 1.0
+        if traffic_speed < 20:  # Heavy traffic
+            speed_factor = 1.5
+        elif traffic_speed < 40:  # Moderate traffic
+            speed_factor = 1.2
+        
+        total_emission = 0
+        for vehicle_type, count in vehicle_types.items():
+            total_emission += count * emission_factors[vehicle_type] * speed_factor
+        
+        return total_emission / 1000  # Convert to kg CO2
+    
+    def prepare_features(self, timestamp, weather_data, event_data, historical_data):
+        temporal_features = self.extract_temporal_features(timestamp)
+        
+        features = [
+            temporal_features['hour'],
+            temporal_features['day_of_week'],
+            temporal_features['month'],
+            temporal_features['is_weekend'],
+            weather_data.get('temperature', 20),
+            1 if weather_data.get('condition') == 'rain' else 0,
+            1 if event_data.get('nearby_event') else 0,
+            historical_data.get('avg_traffic', 50)
+        ]
+        
+        return np.array(features)`}
+                </pre>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="api" className="space-y-6">
             <Card>
               <CardHeader>
@@ -348,106 +348,34 @@ class PredictionEngine:
                   <CardTitle>API Integration Layer</CardTitle>
                 </div>
                 <CardDescription>
-                  RESTful API for accessing predictions and real-time data
+                  Flask web framework for accessing the model's predictions
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
-                  {`from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel
-from datetime import datetime, timedelta
-import uvicorn
+                  {`from flask import Flask, request, jsonify
+import joblib
+import numpy as np
 
-app = FastAPI(title="Traffic Prediction API", version="1.0.0")
+app = Flask(__name__)
 
-class PredictionRequest(BaseModel):
-    location_id: str
-    target_datetime: datetime
-    include_carbon: bool = True
+model = joblib.load('./model.pkl')
 
-class PredictionResponse(BaseModel):
-    location_id: str
-    prediction_time: str
-    vehicle_count: int
-    traffic_level: float
-    traffic_status: str
-    carbon_emission: float
-    confidence: float
-    generated_at: str
-
-@app.post("/predict", response_model=PredictionResponse)
-async def predict_traffic(request: PredictionRequest):
+@app.route('/predict', methods=['POST'])
+def predict():
     try:
-        # Validate input
-        if request.target_datetime < datetime.now():
-            raise HTTPException(status_code=400, detail="Cannot predict past events")
+        data = request.get_json(force=True)
+        features = np.array(data['features']).reshape(1, -1)
         
-        if request.target_datetime > datetime.now() + timedelta(hours=48):
-            raise HTTPException(status_code=400, detail="Prediction range limited to 48 hours")
-        
-        # Make prediction
-        prediction = await prediction_engine.predict_traffic(
-            request.location_id, 
-            request.target_datetime
-        )
-        
-        # Add traffic status
-        prediction['traffic_status'] = prediction_engine.get_traffic_status(
-            prediction['traffic_level']
-        )
-        
-        return PredictionResponse(**prediction)
-        
+        prediction = model.predict(features)
+        return jsonify({'prediction': prediction.tolist()})
+    
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return jsonify({'error': str(e)}), 400
 
-@app.get("/locations/{location_id}/current")
-async def get_current_traffic(location_id: str):
-    try:
-        current_time = datetime.now()
-        prediction = await prediction_engine.predict_traffic(location_id, current_time)
-        
-        return {
-            "location_id": location_id,
-            "current_time": current_time.isoformat(),
-            "vehicle_count": prediction['vehicle_count'],
-            "traffic_level": prediction['traffic_level'],
-            "traffic_status": prediction_engine.get_traffic_status(prediction['traffic_level']),
-            "carbon_emission": prediction['carbon_emission']
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/locations/{location_id}/forecast")
-async def get_traffic_forecast(location_id: str, hours: int = 24):
-    try:
-        if hours > 48:
-            raise HTTPException(status_code=400, detail="Forecast limited to 48 hours")
-        
-        current_time = datetime.now()
-        forecasts = []
-        
-        for hour in range(1, hours + 1):
-            target_time = current_time + timedelta(hours=hour)
-            prediction = await prediction_engine.predict_traffic(location_id, target_time)
-            forecasts.append(prediction)
-        
-        return {
-            "location_id": location_id,
-            "forecast_generated_at": current_time.isoformat(),
-            "forecasts": forecasts
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)`}
+if __name__ == '__main__':
+    app.run(port=5000, debug=True)
+`}
                 </pre>
               </CardContent>
             </Card>

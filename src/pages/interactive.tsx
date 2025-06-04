@@ -23,7 +23,9 @@ import {
 export default function InteractivePage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
-  const [location, setLocation] = useState("downtown-intersection");
+  const [selectedHumidity, setSelectedHumidity] = useState<number>();
+  const [selectedPrecipitation, setSelectedPrecipitation] = useState<number>();
+  const [selectedCloudCover, setSelectedCloudCover] = useState<number>();
   const [prediction, setPrediction] = useState<{
     vehicleCount: number;
     trafficLevel: number;
@@ -43,46 +45,37 @@ export default function InteractivePage() {
 
     // Simulate API call with realistic predictions
     setTimeout(async () => {
-      // const response = await fetch("http://localhost:5000/predict", {
-      //   method: "POST",
-      //   body: JSON.stringify({"features": []})
-      // })
-
-      // const result = await response.json()
-
       const hour = Number.parseInt(selectedTime.split(":")[0]);
-      const dayOfWeek = new Date(selectedDate).getDay();
+      const dayOfWeek = new Date(selectedDate).getDate();
+      const month = new Date(selectedDate).getMonth();
 
-      // Generate realistic predictions based on time and day
-      let baseVehicleCount = 45;
-      let baseTrafficLevel = 35;
-      let baseCarbonEmission = 2.1;
+      const dto = {
+        "relative_humidity_2m (%)": selectedHumidity,
+        "precipitation (mm)": selectedPrecipitation,
+        "cloud_cover (%)": selectedCloudCover,
+        Hour: hour,
+        Day: dayOfWeek,
+        Month: month,
+      };
 
-      // Rush hour adjustments
-      if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) {
-        baseVehicleCount *= 2.5;
-        baseTrafficLevel *= 2.2;
-        baseCarbonEmission *= 2.3;
-      }
+      const response = await fetch("http://localhost:5000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dto),
+      });
 
-      // Weekend adjustments
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
-        baseVehicleCount *= 0.7;
-        baseTrafficLevel *= 0.6;
-        baseCarbonEmission *= 0.65;
-      }
+      const result = await response.json();
+      console.log(result);
 
-      // Add some randomness
-      const randomFactor = 0.8 + Math.random() * 0.4;
+      const totalVehicle = result.prediction[0];
 
       setPrediction({
-        vehicleCount: Math.round(baseVehicleCount * randomFactor),
-        trafficLevel: Math.min(
-          100,
-          Math.round(baseTrafficLevel * randomFactor)
-        ),
-        carbonEmission: (baseCarbonEmission * randomFactor).toFixed(2),
-        confidence: (85 + Math.random() * 10).toFixed(1),
+        vehicleCount: Math.round(totalVehicle),
+        trafficLevel: Math.min(100, (totalVehicle / 7500) * 100),
+        carbonEmission: ((150 * totalVehicle) / 1000).toFixed(2),
+        confidence: "78",
         timestamp: `${selectedDate} ${selectedTime}`,
       });
 
@@ -135,9 +128,8 @@ export default function InteractivePage() {
             Traffic Prediction Interface
           </h1>
           <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-            Enter a date and time to get AI-powered predictions for vehicle
-            count, traffic congestion, and carbon emissions at your selected
-            location.
+            Enter a date and time to get AI-powered predictions for traffic
+            congestion patterns and environmental impact near MH Thamrin
           </p>
         </div>
 
@@ -150,34 +142,50 @@ export default function InteractivePage() {
                 Prediction Parameters
               </CardTitle>
               <CardDescription>
-                Select the date, time, and location for traffic prediction
+                Select the date and time for traffic prediction near Thamrin
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <select
-                  id="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="downtown-intersection">
-                    Downtown Main Intersection
-                  </option>
-                  <option value="highway-junction">
-                    Highway Junction A-12
-                  </option>
-                  <option value="business-district">
-                    Business District Center
-                  </option>
-                  <option value="residential-area">Residential Area Hub</option>
-                  <option value="shopping-center">
-                    Shopping Center Entrance
-                  </option>
-                </select>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="humidity">Humidity (%)</Label>
+                  <Input
+                    id="humidity"
+                    type="number"
+                    placeholder="66"
+                    value={selectedHumidity}
+                    onChange={(e) =>
+                      setSelectedHumidity(Number(e.target.value))
+                    }
+                    min={0}
+                    max={100}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="precipitation">Precipitation (mm)</Label>
+                  <Input
+                    id="precipitation"
+                    type="number"
+                    placeholder="1.4"
+                    value={selectedPrecipitation}
+                    onChange={(e) =>
+                      setSelectedPrecipitation(Number(e.target.value))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cloudCover">Cloud Cover (%)</Label>
+                  <Input
+                    id="cloudCover"
+                    type="number"
+                    placeholder="35"
+                    value={selectedCloudCover}
+                    onChange={(e) =>
+                      setSelectedCloudCover(Number(e.target.value))
+                    }
+                  />
+                </div>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="date">Date</Label>
@@ -233,8 +241,8 @@ export default function InteractivePage() {
                     </h4>
                     <p className="text-sm text-blue-700">
                       Predictions are based on historical data, weather
-                      patterns, and real-time traffic analysis. Accuracy may
-                      vary during special events or unusual circumstances.
+                      patterns, and traffic analysis. Accuracy may vary during
+                      events or unusual circumstances.
                     </p>
                   </div>
                 </div>
@@ -289,7 +297,7 @@ export default function InteractivePage() {
                       <div className="flex items-center justify-between">
                         <span className="text-slate-600">Traffic Level</span>
                         <span className="font-semibold text-slate-900">
-                          {prediction.trafficLevel}%
+                          {prediction.trafficLevel.toString().substring(0, 5)}%
                         </span>
                       </div>
 
