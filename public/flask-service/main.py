@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 
 print(os.getcwd())
-model = joblib.load('./public/flask-service/traffic_model.pkl')
+model = joblib.load('./traffic_model.pkl')
 
 @app.route('/predict', methods=['POST'])
 def predict():

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import {
   Card,
@@ -19,6 +21,12 @@ import {
   TrendingUp,
   AlertTriangle,
 } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 export default function InteractivePage() {
   const [selectedDate, setSelectedDate] = useState("");
@@ -34,53 +42,135 @@ export default function InteractivePage() {
     timestamp: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{
+    humidity?: string;
+    precipitation?: string;
+    cloudCover?: string;
+    date?: string;
+    time?: string;
+  }>({});
+  const [hourlyPredictions, setHourlyPredictions] = useState<
+    Array<{
+      hour: number;
+      vehicleCount: number;
+      carbonEmission: number;
+    }>
+  >([]);
+
+  const validateInputs = () => {
+    const newErrors: typeof errors = {};
+
+    if (!selectedDate) {
+      newErrors.date = "Date is required";
+    }
+
+    if (!selectedTime) {
+      newErrors.time = "Time is required";
+    }
+
+    if (
+      selectedHumidity === undefined ||
+      selectedHumidity === null ||
+      selectedHumidity < 0 ||
+      selectedHumidity > 100
+    ) {
+      newErrors.humidity = "Humidity must be between 0-100%";
+    }
+
+    if (
+      selectedPrecipitation === undefined ||
+      selectedPrecipitation === null ||
+      selectedPrecipitation < 0
+    ) {
+      newErrors.precipitation = "Precipitation must be 0 or greater";
+    }
+
+    if (
+      selectedCloudCover === undefined ||
+      selectedCloudCover === null ||
+      selectedCloudCover < 0 ||
+      selectedCloudCover > 100
+    ) {
+      newErrors.cloudCover = "Cloud cover must be between 0-100%";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handlePredict = async () => {
-    if (!selectedDate || !selectedTime) {
-      alert("Please select both date and time");
+    if (!validateInputs()) {
       return;
     }
 
     setIsLoading(true);
 
-    // Simulate API call with realistic predictions
-    setTimeout(async () => {
-      const hour = Number.parseInt(selectedTime.split(":")[0]);
+    try {
       const dayOfWeek = new Date(selectedDate).getDate();
       const month = new Date(selectedDate).getMonth();
 
-      const dto = {
-        "relative_humidity_2m (%)": selectedHumidity,
-        "precipitation (mm)": selectedPrecipitation,
-        "cloud_cover (%)": selectedCloudCover,
-        Hour: hour,
-        Day: dayOfWeek,
-        Month: month,
-      };
+      // Generate 24-hour predictions
+      const hourlyData = [];
+      for (let hour = 0; hour < 24; hour++) {
+        const dto = {
+          "relative_humidity_2m (%)": selectedHumidity,
+          "precipitation (mm)": selectedPrecipitation,
+          "cloud_cover (%)": selectedCloudCover,
+          Hour: hour,
+          Day: dayOfWeek,
+          Month: month,
+        };
 
-      const response = await fetch("http://localhost:5000/predict", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dto),
-      });
+        const response = await fetch("http://localhost:5000/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dto),
+        });
 
-      const result = await response.json();
-      console.log(result);
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.statusText}`);
+        }
 
-      const totalVehicle = result.prediction[0];
+        const result = await response.json();
+        const totalVehicle = result.prediction[0];
+        const motorcycleEmission = 3 * (2 / 3) * totalVehicle;
+        const carEmission = 1 * (1 / 3) * totalVehicle;
 
-      setPrediction({
-        vehicleCount: Math.round(totalVehicle),
-        trafficLevel: Math.min(100, (totalVehicle / 7500) * 100),
-        carbonEmission: ((150 * totalVehicle) / 1000).toFixed(2),
-        confidence: "78",
-        timestamp: `${selectedDate} ${selectedTime}`,
-      });
+        hourlyData.push({
+          hour,
+          vehicleCount: Math.round(totalVehicle),
+          carbonEmission: motorcycleEmission + carEmission,
+        });
+      }
 
+      setHourlyPredictions(hourlyData);
+
+      // Set the prediction for the selected time
+      const selectedHour = Number.parseInt(selectedTime.split(":")[0]);
+      const selectedHourData = hourlyData.find(
+        (data) => data.hour === selectedHour
+      );
+
+      if (selectedHourData) {
+        setPrediction({
+          vehicleCount: selectedHourData.vehicleCount,
+          trafficLevel: Math.min(
+            100,
+            (selectedHourData.vehicleCount / 7500) * 100
+          ),
+          carbonEmission: selectedHourData.carbonEmission.toFixed(2),
+          confidence: "78",
+          timestamp: `${selectedDate} ${selectedTime}`,
+        });
+      }
+    } catch (error) {
+      console.error("Prediction error:", error);
+      setErrors({ date: "Failed to get prediction. Please try again." });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const getTrafficStatus = (level: number) => {
@@ -153,13 +243,20 @@ export default function InteractivePage() {
                     id="humidity"
                     type="number"
                     placeholder="66"
-                    value={selectedHumidity}
-                    onChange={(e) =>
-                      setSelectedHumidity(Number(e.target.value))
-                    }
+                    value={selectedHumidity || ""}
+                    onChange={(e) => {
+                      setSelectedHumidity(Number(e.target.value));
+                      if (errors.humidity) {
+                        setErrors((prev) => ({ ...prev, humidity: undefined }));
+                      }
+                    }}
                     min={0}
                     max={100}
+                    className={errors.humidity ? "border-red-500" : ""}
                   />
+                  {errors.humidity && (
+                    <p className="text-sm text-red-600">{errors.humidity}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="precipitation">Precipitation (mm)</Label>
@@ -167,11 +264,24 @@ export default function InteractivePage() {
                     id="precipitation"
                     type="number"
                     placeholder="1.4"
-                    value={selectedPrecipitation}
-                    onChange={(e) =>
-                      setSelectedPrecipitation(Number(e.target.value))
-                    }
+                    value={selectedPrecipitation || ""}
+                    onChange={(e) => {
+                      setSelectedPrecipitation(Number(e.target.value));
+                      if (errors.precipitation) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          precipitation: undefined,
+                        }));
+                      }
+                    }}
+                    min={0}
+                    className={errors.precipitation ? "border-red-500" : ""}
                   />
+                  {errors.precipitation && (
+                    <p className="text-sm text-red-600">
+                      {errors.precipitation}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="cloudCover">Cloud Cover (%)</Label>
@@ -179,11 +289,23 @@ export default function InteractivePage() {
                     id="cloudCover"
                     type="number"
                     placeholder="35"
-                    value={selectedCloudCover}
-                    onChange={(e) =>
-                      setSelectedCloudCover(Number(e.target.value))
-                    }
+                    value={selectedCloudCover || ""}
+                    onChange={(e) => {
+                      setSelectedCloudCover(Number(e.target.value));
+                      if (errors.cloudCover) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          cloudCover: undefined,
+                        }));
+                      }
+                    }}
+                    min={0}
+                    max={100}
+                    className={errors.cloudCover ? "border-red-500" : ""}
                   />
+                  {errors.cloudCover && (
+                    <p className="text-sm text-red-600">{errors.cloudCover}</p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -193,14 +315,17 @@ export default function InteractivePage() {
                     id="date"
                     type="date"
                     value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                    max={
-                      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                        .toISOString()
-                        .split("T")[0]
-                    }
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      if (errors.date) {
+                        setErrors((prev) => ({ ...prev, date: undefined }));
+                      }
+                    }}
+                    className={errors.date ? "border-red-500" : ""}
                   />
+                  {errors.date && (
+                    <p className="text-sm text-red-600">{errors.date}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="time">Time</Label>
@@ -208,8 +333,17 @@ export default function InteractivePage() {
                     id="time"
                     type="time"
                     value={selectedTime}
-                    onChange={(e) => setSelectedTime(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedTime(e.target.value);
+                      if (errors.time) {
+                        setErrors((prev) => ({ ...prev, time: undefined }));
+                      }
+                    }}
+                    className={errors.time ? "border-red-500" : ""}
                   />
+                  {errors.time && (
+                    <p className="text-sm text-red-600">{errors.time}</p>
+                  )}
                 </div>
               </div>
 
@@ -254,6 +388,76 @@ export default function InteractivePage() {
           <div className="space-y-6">
             {prediction ? (
               <>
+                {hourlyPredictions.length > 0 && (
+                  <Card className="border-0 shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5 text-blue-600" />
+                        24-Hour Traffic Prediction
+                      </CardTitle>
+                      <CardDescription>
+                        Hourly vehicle count and carbon emission predictions for{" "}
+                        {selectedDate}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer
+                        config={{
+                          vehicleCount: {
+                            label: "Vehicle Count",
+                            color: "#155dfc",
+                          },
+                          carbonEmission: {
+                            label: "Carbon Emission (kg CO₂)",
+                            color: "green",
+                          },
+                        }}
+                        className="min-h-[300px] max-w-[500px]"
+                      >
+                        <BarChart
+                          accessibilityLayer
+                          data={hourlyPredictions.map((data) => ({
+                            hour: `${data.hour.toString().padStart(2, "0")}:00`,
+                            vehicleCount: data.vehicleCount,
+                            carbonEmission:
+                              Math.round(data.carbonEmission * 10) / 10,
+                          }))}
+                        >
+                          <CartesianGrid vertical={false} />
+                          <XAxis
+                            dataKey="hour"
+                            tickLine={false}
+                            tickMargin={10}
+                            axisLine={false}
+                            interval={2}
+                          />
+                          <YAxis
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                          />
+                          <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent indicator="dot" />}
+                          />
+                          <Bar
+                            dataKey="vehicleCount"
+                            fill="var(--color-vehicleCount)"
+                            radius={4}
+                          />
+                        </BarChart>
+                      </ChartContainer>
+                      <div className="mt-4 text-sm text-slate-600 bg-blue-50 p-3 rounded-lg">
+                        <p>
+                          <strong>Peak Hours:</strong> The chart shows expected
+                          traffic patterns throughout the day. Higher bars
+                          indicate more congested periods with increased vehicle
+                          counts and emissions.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
                 <Card className="border-0 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">

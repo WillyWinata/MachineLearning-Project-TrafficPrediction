@@ -151,19 +151,19 @@ export default function HomePage() {
                   <span className="text-slate-600">
                     R2 Error Score
                   </span>
-                  <span className="font-semibold text-slate-900">78.0%</span>
+                  <span className="font-semibold text-slate-900">76.0%</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">
                     Mean Average Error (MAE)
                   </span>
-                  <span className="font-semibold text-slate-900">871.65</span>
+                  <span className="font-semibold text-slate-900">896.72</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">
                     Root Mean Square Error (RMSE)
                   </span>
-                  <span className="font-semibold text-slate-900">1203.06</span>
+                  <span className="font-semibold text-slate-900">12029.31</span>
                 </div>
               </div>
             </div>
